@@ -52,7 +52,7 @@ app.get('/health', (req, res) => {
     status: 'OK',
     message: 'Chat API is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.MYSQL_HOST ? 'production' : 'development'
   });
 });
 
@@ -204,6 +204,6 @@ io.on("connection", (socket) => {
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Environment: ${process.env.MYSQL_HOST ? 'production' : 'development'}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
 });

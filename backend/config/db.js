@@ -10,8 +10,8 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  // Railway specific settings
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Railway specific settings - detect production by presence of Railway MySQL variables
+  ssl: process.env.MYSQL_HOST ? { rejectUnauthorized: false } : false,
   connectTimeout: 60000,
   acquireTimeout: 60000,
   timeout: 60000,
