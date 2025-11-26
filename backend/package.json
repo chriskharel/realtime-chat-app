@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "echo 'No build step needed'",
+    "migrate": "node migrate.js",
     "dev": "nodemon server.js",
+    "production": "npm run migrate && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

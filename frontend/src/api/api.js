@@ -1,8 +1,11 @@
 // src/api/api.js
 import axios from "axios";
 
+// Use environment variable for API URL in production
+const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const API = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: `${baseURL}/api`,
 });
 
 // Automatically attach token if exists

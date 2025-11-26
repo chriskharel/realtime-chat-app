@@ -20,8 +20,17 @@ dotenv.config();
 const app = express();
 
 // Middlewares
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "http://localhost:5174", 
+  "http://localhost:3000",
+  process.env.FRONTEND_URL, // Vercel URL will be added here
+  "https://realtime-chat-app-git-main-chriskharel.vercel.app", // Default Vercel pattern
+  "https://realtime-chat-app-chriskharel.vercel.app", // Custom Vercel pattern
+].filter(Boolean);
+
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+  origin: allowedOrigins,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
@@ -37,14 +46,43 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 app.use("/api/user", userRoutes);
 
+// Health check endpoint for Railway
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Chat API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Real-time Chat API',
+    version: '1.0.0',
+    status: 'Online',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      chats: '/api/chat',
+      messages: '/api/message',
+      users: '/api/user'
+    }
+  });
+});
+
 // Create HTTP server for socket.io
 const server = http.createServer(app);
 
 // Initialize socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*",   // For development only
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   },
+  transports: ['websocket', 'polling']
 });
 
 io.on("connection", (socket) => {
