@@ -198,14 +198,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// Auto-run migrations in production
-if (process.env.NODE_ENV === 'production') {
-  console.log('🗄️ Running database migrations...');
-  import('./migrate.js').catch(err => {
-    console.error('Migration failed:', err);
-    // Don't exit in production, just log the error
-  });
-}
+// Note: Migrations can be run manually with: node migrate.js
+// Removed auto-migration to simplify deployment
 
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
