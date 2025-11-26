@@ -19,22 +19,44 @@ dotenv.config();
 
 const app = express();
 
-// Middlewares
-const allowedOrigins = [
-  "http://localhost:5173", 
-  "http://localhost:5174", 
-  "http://localhost:3000",
-  process.env.FRONTEND_URL, // Vercel URL will be added here
-  "https://realtime-chat-app-git-main-chriskharel.vercel.app", // Default Vercel pattern
-  "https://realtime-chat-app-chriskharel.vercel.app", // Custom Vercel pattern
-].filter(Boolean);
-
-app.use(cors({
-  origin: allowedOrigins,
+// Flexible CORS configuration for Vercel deployments
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      "http://localhost:5173", 
+      "http://localhost:5174", 
+      "http://localhost:3000",
+      process.env.FRONTEND_URL, // Main Vercel URL
+    ].filter(Boolean);
+    
+    // Check exact matches first
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Check Vercel patterns
+    const vercelPatterns = [
+      /^https:\/\/realtime-chat-.*\.vercel\.app$/,
+      /^https:\/\/realtime-chat-.*-krishna-kharels-projects\.vercel\.app$/,
+      /^https:\/\/.*\.vercel\.app$/
+    ];
+    
+    const isVercelDomain = vercelPatterns.some(pattern => pattern.test(origin));
+    if (isVercelDomain) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
-}));
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Serve static files (avatars)
@@ -75,10 +97,38 @@ app.get('/', (req, res) => {
 // Create HTTP server for socket.io
 const server = http.createServer(app);
 
-// Initialize socket.io
+// Initialize socket.io with flexible CORS
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      // Allow requests with no origin
+      if (!origin) return callback(null, true);
+      
+      const allowedOrigins = [
+        "http://localhost:5173", 
+        "http://localhost:5174", 
+        "http://localhost:3000",
+        process.env.FRONTEND_URL,
+      ].filter(Boolean);
+      
+      // Check exact matches
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Check Vercel patterns
+      const vercelPatterns = [
+        /^https:\/\/realtime-chat-.*\.vercel\.app$/,
+        /^https:\/\/realtime-chat-.*-krishna-kharels-projects\.vercel\.app$/,
+      ];
+      
+      const isVercelDomain = vercelPatterns.some(pattern => pattern.test(origin));
+      if (isVercelDomain) {
+        return callback(null, true);
+      }
+      
+      callback(null, false);
+    },
     methods: ["GET", "POST"],
     credentials: true
   },
