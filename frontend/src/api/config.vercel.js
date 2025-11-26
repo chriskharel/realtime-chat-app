@@ -7,7 +7,7 @@ const API_BASE_URL_VERCEL = '/api';
 // Keep original Railway URL as fallback
 const API_BASE_URL_RAILWAY = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-export const API_BASE_URL = API_BASE_URL_RAILWAY; // Currently using Railway
+export const API_BASE_URL = API_BASE_URL_VERCEL; // ✅ NOW USING VERCEL!
 export const API_BASE_URL_VERCEL_READY = API_BASE_URL_VERCEL; // Ready for Vercel switch
 
 export default API_BASE_URL;
