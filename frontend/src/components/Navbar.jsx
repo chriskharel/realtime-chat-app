@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth.js";
 import Avatar from "./Avatar.jsx";
+import ConnectionStatus from "./ConnectionStatus.jsx";
 import { getUserProfileRequest } from "../api/userApi.js";
 
 export default function Navbar() {
@@ -19,11 +20,14 @@ export default function Navbar() {
 
   return (
     <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-6 py-4">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-slate-400">
-          Realtime Chat
-        </p>
-        <h1 className="text-xl font-semibold text-white">ConnectNow</h1>
+      <div className="flex items-center space-x-6">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-slate-400">
+            Realtime Chat
+          </p>
+          <h1 className="text-xl font-semibold text-white">ConnectNow</h1>
+        </div>
+        <ConnectionStatus />
       </div>
 
       <div className="flex items-center space-x-4">

@@ -77,7 +77,14 @@ export function ChatProvider({ children }) {
     try {
       const res = await fetchMessagesRequest(chatId);
       setMessages(res.data);
-      socket.emit("join_chat", chatId);
+      
+      // Ensure socket is connected before joining
+      if (socket.connected) {
+        socket.emit("join_chat", Number(chatId));
+        console.log("Joined chat room:", chatId);
+      } else {
+        console.warn("Socket not connected, cannot join chat");
+      }
     } catch (error) {
       console.error("Failed to load messages", error);
     } finally {
@@ -87,10 +94,27 @@ export function ChatProvider({ children }) {
 
   const sendMessage = useCallback(async (chatId, content) => {
     if (!chatId || !content.trim()) return null;
-    const res = await sendMessageRequest(chatId, content.trim());
-    setMessages((prev) => [...prev, res.data]);
-    socket.emit("send_message", { chatId, message: res.data });
-    return res.data;
+    
+    try {
+      const res = await sendMessageRequest(chatId, content.trim());
+      setMessages((prev) => [...prev, res.data]);
+      
+      // Emit to socket for real-time delivery to other users
+      if (socket.connected) {
+        socket.emit("send_message", { 
+          chatId: Number(chatId), 
+          message: res.data 
+        });
+        console.log("Message sent via socket to chat:", chatId);
+      } else {
+        console.warn("Socket not connected, message won't be delivered in real-time");
+      }
+      
+      return res.data;
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      throw error;
+    }
   }, []);
 
   const sendFileMessage = useCallback(async (chatId, file, content = '') => {
@@ -163,25 +187,46 @@ export function ChatProvider({ children }) {
   useEffect(() => {
     if (user) {
       loadChats();
-      // Authenticate user with socket
+      
+      // Connect and authenticate socket
+      if (!socket.connected) {
+        socket.connect();
+      }
       socket.emit("authenticate", { userId: user.id });
+      
+      console.log("Socket connected and authenticated for user:", user.id);
     } else {
       resetChatState();
+      if (socket.connected) {
+        socket.disconnect();
+      }
     }
   }, [user, loadChats]);
 
   useEffect(() => {
-    const handleReceive = (message) => {
-      const incomingChatId = message.chat_id ?? message.chatId;
+    const handleReceive = (data) => {
+      console.log("Received message:", data);
+      const message = data.message || data;
+      const incomingChatId = message.chat_id ?? message.chatId ?? data.chatId;
 
-      if (Number(incomingChatId) !== Number(selectedChatId)) return;
-
-      setMessages((prev) => {
-        if (message.id && prev.some((existing) => existing.id === message.id)) {
-          return prev;
-        }
-        return [...prev, message];
-      });
+      // Only add message to current chat's messages if it's the selected chat
+      if (Number(incomingChatId) === Number(selectedChatId)) {
+        setMessages((prev) => {
+          if (message.id && prev.some((existing) => existing.id === message.id)) {
+            return prev;
+          }
+          return [...prev, message];
+        });
+      }
+      
+      // Always update the chat list to show latest message preview
+      setChats(prevChats => 
+        prevChats.map(chat => 
+          chat.id === Number(incomingChatId) 
+            ? { ...chat, lastMessage: message, lastMessageAt: message.created_at || new Date().toISOString() }
+            : chat
+        )
+      );
     };
 
     const handleMessageDelivered = (data) => {
@@ -232,12 +277,15 @@ export function ChatProvider({ children }) {
       }
     };
 
+    // Register socket event listeners
     socket.on("receive_message", handleReceive);
     socket.on("message_delivered", handleMessageDelivered);
     socket.on("message_read_receipt", handleMessageReadReceipt);
     socket.on("messages_read", handleMessagesRead);
     socket.on("chat_deleted", handleChatDeleted);
     socket.on("message_deleted", handleMessageDeleted);
+
+    console.log("Socket event listeners registered for user:", user?.id);
 
     return () => {
       socket.off("receive_message", handleReceive);
@@ -246,6 +294,7 @@ export function ChatProvider({ children }) {
       socket.off("messages_read", handleMessagesRead);
       socket.off("chat_deleted", handleChatDeleted);
       socket.off("message_deleted", handleMessageDeleted);
+      console.log("Socket event listeners cleaned up");
     };
   }, [selectedChatId, user?.id]);
 

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, memo } from "react";
+import toast from "react-hot-toast";
 import FileMessage from "./FileMessage.jsx";
 import ReadReceiptIndicator from "./ReadReceiptIndicator.jsx";
 import DeleteMessageModal from "./DeleteMessageModal.jsx";
 import { useChat } from "../context/ChatContext.jsx";
 
-export default function MessageItem({ message, isSender }) {
+const MessageItem = memo(function MessageItem({ message, isSender }) {
   const { deleteMessage } = useChat();
   const [isHovered, setIsHovered] = useState(false);
   const [deleteModal, setDeleteModal] = useState({
@@ -33,7 +34,7 @@ export default function MessageItem({ message, isSender }) {
       });
     } catch (error) {
       console.error("Failed to delete message:", error);
-      alert("Failed to delete message. Please try again.");
+      toast.error("Failed to delete message. Please try again.");
       setDeleteModal(prev => ({ ...prev, loading: false }));
     }
   };
@@ -47,12 +48,17 @@ export default function MessageItem({ message, isSender }) {
 
   return (
     <>
-      <div className={`flex ${isSender ? "justify-end" : "justify-start"}`}>
+      <div 
+        className={`flex ${isSender ? "justify-end" : "justify-start"} animate-fadeIn`}
+        style={{
+          animation: 'fadeInUp 0.3s ease-out'
+        }}
+      >
         <div 
-          className={`group relative max-w-xs rounded-2xl px-4 py-3 text-sm shadow-md sm:max-w-md ${
+          className={`group relative max-w-xs rounded-2xl px-4 py-3 text-sm shadow-md sm:max-w-md transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
             isSender
-              ? "bg-blue-600 text-white rounded-br-none"
-              : "bg-slate-800 text-slate-100 rounded-bl-none"
+              ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-none hover:from-blue-500 hover:to-blue-600"
+              : "bg-gradient-to-br from-slate-800 to-slate-900 text-slate-100 rounded-bl-none hover:from-slate-700 hover:to-slate-800"
           }`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -99,5 +105,7 @@ export default function MessageItem({ message, isSender }) {
       />
     </>
   );
-}
+});
+
+export default MessageItem;
 

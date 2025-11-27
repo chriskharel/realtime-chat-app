@@ -1,0 +1,65 @@
+#!/bin/bash
+
+echo "🧪 Testing Real-Time Chat Application"
+echo "===================================="
+
+echo ""
+echo "📋 Pre-flight checks:"
+echo "1. Backend server running on http://localhost:8000"
+echo "2. Frontend server running on http://localhost:5173"
+echo "3. Two browser tabs with different users logged in"
+
+echo ""
+echo "🔧 Testing Steps:"
+echo ""
+echo "1. 📱 OPEN TWO BROWSER TABS:"
+echo "   Tab 1: http://localhost:5173 (User A)"
+echo "   Tab 2: http://localhost:5173 (User B)"
+echo ""
+
+echo "2. 👥 LOGIN WITH DIFFERENT USERS:"
+echo "   User A: Login with your first account"
+echo "   User B: Login with your second account"
+echo ""
+
+echo "3. 💬 START A CHAT:"
+echo "   In User A tab: Start chat with User B"
+echo "   Both users should see the chat"
+echo ""
+
+echo "4. 🚀 TEST REAL-TIME MESSAGING:"
+echo "   User A: Type and send a message"
+echo "   User B: Should see message INSTANTLY (no refresh)"
+echo "   User B: Reply with a message"
+echo "   User A: Should see reply INSTANTLY"
+echo ""
+
+echo "5. ✅ SUCCESS INDICATORS:"
+echo "   - Messages appear instantly without refresh"
+echo "   - Console shows socket connection logs"
+echo "   - Typing indicators work (if implemented)"
+echo ""
+
+echo "🔍 DEBUG INFO:"
+echo "Open browser developer tools (F12) and check Console tab"
+echo "You should see logs like:"
+echo "  ✅ Socket connected: [socket-id]"
+echo "  🚪 Joined chat room: [chat-id]"
+echo "  📨 Received message: [message-data]"
+
+echo ""
+echo "🚨 TROUBLESHOOTING:"
+echo "If messages don't appear instantly:"
+echo "1. Check browser console for socket errors"
+echo "2. Check backend terminal for socket logs"
+echo "3. Ensure both users are in the same chat"
+echo "4. Try refreshing both tabs and testing again"
+
+echo ""
+echo "🎯 Expected Backend Logs:"
+echo "  🚪 User [userId] joined chat room: chat_[chatId]"
+echo "  📨 Broadcasting message to room chat_[chatId]"
+echo "  ✅ Message delivered to room chat_[chatId]"
+
+echo ""
+echo "Ready to test! 🚀"

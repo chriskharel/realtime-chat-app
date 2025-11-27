@@ -51,6 +51,7 @@ export default function ChatPage() {
   const handleSendMessage = async (id, content) => {
     try {
       await sendMessage(id, content);
+      // Success feedback handled by context
     } catch (error) {
       console.error(error);
       toast.error("Failed to send message");
@@ -58,19 +59,21 @@ export default function ChatPage() {
   };
 
   const handleSendFileMessage = async (id, file, content) => {
+    const loadingToast = toast.loading(`Uploading ${file.name}...`);
     try {
       await sendFileMessage(id, file, content);
+      toast.success("File uploaded successfully!", { id: loadingToast });
     } catch (error) {
       console.error(error);
-      toast.error("Failed to send file");
+      toast.error("Failed to send file", { id: loadingToast });
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-950">
+    <div className="flex h-screen flex-col bg-gray-950">
       <Navbar />
 
-      <main className="flex flex-1 overflow-hidden">
+      <main className="flex flex-1 overflow-hidden min-h-0">
         <div className="w-full max-w-sm border-r border-gray-900">
           <ChatList
             chats={chats}

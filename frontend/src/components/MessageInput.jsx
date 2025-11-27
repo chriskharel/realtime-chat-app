@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, memo } from "react";
+import toast from "react-hot-toast";
 
-export default function MessageInput({ onSend, onSendFile, disabled, onTypingStart, onTypingStop }) {
+const MessageInput = memo(function MessageInput({ onSend, onSendFile, disabled, onTypingStart, onTypingStop }) {
   const [value, setValue] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
@@ -8,7 +9,7 @@ export default function MessageInput({ onSend, onSendFile, disabled, onTypingSta
   const isTypingRef = useRef(false);
   const fileInputRef = useRef(null);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     
     if (!value.trim() && !selectedFile) return;
@@ -28,15 +29,15 @@ export default function MessageInput({ onSend, onSendFile, disabled, onTypingSta
     }
     
     setValue("");
-  };
+  }, [value, selectedFile, onSend, onSendFile, onTypingStop]);
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     // Validate file size (10MB limit)
     if (file.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB");
+      toast.error("File size must be less than 10MB");
       return;
     }
 
@@ -55,12 +56,12 @@ export default function MessageInput({ onSend, onSendFile, disabled, onTypingSta
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
+  }, []);
 
-  const handleRemoveFile = () => {
+  const handleRemoveFile = useCallback(() => {
     setSelectedFile(null);
     setFilePreview(null);
-  };
+  }, []);
 
   const handleInputChange = (e) => {
     const newValue = e.target.value;
@@ -155,9 +156,16 @@ export default function MessageInput({ onSend, onSendFile, disabled, onTypingSta
           type="text"
           value={value}
           onChange={handleInputChange}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
           placeholder={selectedFile ? "Add a caption..." : "Type a message"}
-          className="flex-1 bg-transparent text-sm text-white placeholder-slate-400 focus:outline-none"
+          className="flex-1 bg-transparent text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded px-1 py-1 transition-all"
           disabled={disabled}
+          autoFocus
         />
         
         <button
@@ -170,5 +178,7 @@ export default function MessageInput({ onSend, onSendFile, disabled, onTypingSta
       </div>
     </form>
   );
-}
+});
+
+export default MessageInput;
 

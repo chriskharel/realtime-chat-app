@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ChatList from "./pages/ChatList";
@@ -10,8 +11,9 @@ import "./App.css";
 
 export default function App() {
   return (
-    <div className="app-container">
-      <BrowserRouter>
+    <ErrorBoundary>
+      <div className="app-container">
+        <BrowserRouter>
         <div className="min-h-screen bg-slate-950 text-slate-100">
           <Routes>
             <Route path="/" element={<Login />} />
@@ -58,5 +60,6 @@ export default function App() {
         />
       </BrowserRouter>
     </div>
+    </ErrorBoundary>
   );
 }

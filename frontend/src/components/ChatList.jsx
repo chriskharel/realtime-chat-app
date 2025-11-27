@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import ChatItem from "./ChatItem.jsx";
 import DeleteChatModal from "./DeleteChatModal.jsx";
 import useAuth from "../hooks/useAuth.js";
@@ -49,7 +50,7 @@ export default function ChatList({
       });
     } catch (error) {
       console.error("Failed to delete chat:", error);
-      alert("Failed to delete chat. Please try again.");
+      toast.error("Failed to delete chat. Please try again.");
       setDeleteModal(prev => ({ ...prev, loading: false }));
     }
   };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import MessageList from "./MessageList.jsx";
 import MessageInput from "./MessageInput.jsx";
 import TypingIndicator from "./TypingIndicator.jsx";
@@ -18,8 +18,43 @@ export default function ChatRoom({
   const { user } = useAuth();
   const [otherUser, setOtherUser] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
+  const chatRoomRef = useRef(null);
 
   const otherUserId = chat ? (chat.user1_id === user?.id ? chat.user2_id : chat.user1_id) : null;
+
+  // Keyboard shortcuts
+  const handleKeyDown = useCallback((e) => {
+    // ESC - Focus input or blur if already focused
+    if (e.key === 'Escape') {
+      const messageInput = document.querySelector('input[type="text"]');
+      if (document.activeElement === messageInput) {
+        messageInput.blur();
+      } else {
+        messageInput?.focus();
+      }
+    }
+    
+    // Ctrl/Cmd + K - Quick focus input
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      document.querySelector('input[type="text"]')?.focus();
+    }
+
+    // Ctrl/Cmd + I - Show chat info (could add modal later)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+      e.preventDefault();
+      console.log('Chat info shortcut pressed');
+    }
+  }, []);
+
+  // Add keyboard event listeners
+  useEffect(() => {
+    const element = chatRoomRef.current;
+    if (element) {
+      element.addEventListener('keydown', handleKeyDown);
+      return () => element.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [handleKeyDown]);
 
   // Load other user's profile
   useEffect(() => {
@@ -85,9 +120,9 @@ export default function ChatRoom({
   }
 
   return (
-    <section className="flex flex-1 flex-col bg-slate-950">
+    <section className="flex flex-1 flex-col bg-slate-950 h-full min-h-0">
       {/* Enhanced Header with Avatar and Online Status */}
-      <header className="border-b border-slate-800 px-6 py-4 bg-slate-900">
+      <header className="border-b border-slate-800 px-6 py-4 bg-slate-900 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <Avatar 
             src={otherUser?.avatar} 
@@ -111,25 +146,29 @@ export default function ChatRoom({
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 flex flex-col">
-        <MessageList
-          messages={messages}
-          currentUserId={user?.id}
-          loading={loadingMessages}
-        />
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 min-h-0">
+          <MessageList
+            messages={messages}
+            currentUserId={user?.id}
+            loading={loadingMessages}
+          />
+        </div>
         
         {/* Typing Indicator */}
         <TypingIndicator typingUsers={typingUsers} />
       </div>
 
       {/* Message Input */}
-      <MessageInput
-        onSend={(value) => onSendMessage?.(chat.id, value)}
-        onSendFile={(file, content) => onSendFileMessage?.(chat.id, file, content)}
-        onTypingStart={handleTypingStart}
-        onTypingStop={handleTypingStop}
-        disabled={loadingMessages}
-      />
+      <div className="flex-shrink-0">
+        <MessageInput
+          onSend={(value) => onSendMessage?.(chat.id, value)}
+          onSendFile={(file, content) => onSendFileMessage?.(chat.id, file, content)}
+          onTypingStart={handleTypingStart}
+          onTypingStop={handleTypingStop}
+          disabled={loadingMessages}
+        />
+      </div>
     </section>
   );
 }

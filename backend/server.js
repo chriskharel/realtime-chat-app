@@ -154,39 +154,45 @@ io.on("connection", (socket) => {
 
   // JOIN CHAT ROOM
   socket.on("join_chat", async (chatId) => {
-    socket.join(chatId);
-    console.log(`User joined chat room: ${chatId}`);
+    const roomName = `chat_${chatId}`;
+    socket.join(roomName);
+    console.log(`🚪 User ${socket.userId} joined chat room: ${roomName}`);
     
     // Mark all messages in this chat as read if user is authenticated
     if (socket.userId) {
       await markChatMessagesAsRead(chatId, socket.userId);
-      socket.to(chatId).emit("messages_read", { chatId, readerId: socket.userId });
+      socket.to(roomName).emit("messages_read", { chatId, readerId: socket.userId });
     }
   });
 
   // LEAVE CHAT ROOM
   socket.on("leave_chat", (chatId) => {
-    socket.leave(chatId);
-    console.log(`User left chat room: ${chatId}`);
+    const roomName = `chat_${chatId}`;
+    socket.leave(roomName);
+    console.log(`🚪 User ${socket.userId} left chat room: ${roomName}`);
   });
 
   // SEND MESSAGE
   socket.on("send_message", (data) => {
     const { chatId, message } = data;
+    const roomName = `chat_${chatId}`;
+    console.log(`📨 Broadcasting message to room ${roomName}:`, message);
     
     // Emit to all users in the chat room except sender
-    socket.to(chatId).emit("receive_message", message);
+    socket.to(roomName).emit("receive_message", message);
     
     // Send delivery confirmation to sender
     socket.emit("message_delivered", { messageId: message.id });
+    console.log(`✅ Message delivered to room ${roomName}`);
   });
 
   // TYPING INDICATOR
   socket.on("typing_start", async (data) => {
     const { chatId } = data;
+    const roomName = `chat_${chatId}`;
     if (socket.userId) {
       await setTypingStatus(chatId, socket.userId, true);
-      socket.to(chatId).emit("user_typing", { 
+      socket.to(roomName).emit("user_typing", { 
         userId: socket.userId, 
         chatId, 
         isTyping: true 
@@ -196,9 +202,10 @@ io.on("connection", (socket) => {
 
   socket.on("typing_stop", async (data) => {
     const { chatId } = data;
+    const roomName = `chat_${chatId}`;
     if (socket.userId) {
       await setTypingStatus(chatId, socket.userId, false);
-      socket.to(chatId).emit("user_typing", { 
+      socket.to(roomName).emit("user_typing", { 
         userId: socket.userId, 
         chatId, 
         isTyping: false 
@@ -209,8 +216,9 @@ io.on("connection", (socket) => {
   // MESSAGE READ RECEIPT
   socket.on("message_read", async (data) => {
     const { messageId, chatId } = data;
+    const roomName = `chat_${chatId}`;
     if (socket.userId) {
-      socket.to(chatId).emit("message_read_receipt", { 
+      socket.to(roomName).emit("message_read_receipt", { 
         messageId, 
         readerId: socket.userId 
       });
@@ -220,15 +228,17 @@ io.on("connection", (socket) => {
   // CHAT DELETE
   socket.on("chat_deleted", (data) => {
     const { chatId, deletedBy } = data;
+    const roomName = `chat_${chatId}`;
     // Notify all users in the chat room that it was deleted
-    socket.to(chatId).emit("chat_deleted", { chatId, deletedBy });
+    socket.to(roomName).emit("chat_deleted", { chatId, deletedBy });
   });
 
   // MESSAGE DELETE
   socket.on("message_deleted", (data) => {
     const { messageId, chatId, deletedBy } = data;
+    const roomName = `chat_${chatId}`;
     // Notify all users in the chat room that the message was deleted
-    socket.to(chatId).emit("message_deleted", { messageId, chatId, deletedBy });
+    socket.to(roomName).emit("message_deleted", { messageId, chatId, deletedBy });
   });
 
   // DISCONNECT
